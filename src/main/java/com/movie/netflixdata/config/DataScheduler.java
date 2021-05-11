@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 @EnableScheduling
 @Configuration
@@ -20,10 +21,12 @@ public class DataScheduler{
     @Scheduled(fixedDelay = 5000)
     public void saveNetflixData(){
 
-        String pathOfFile= "src/main/resources/netflix_titles.csv";
+        String pathOfFile= "data/netflix_titles.csv";
         String line="";
         try{
-            BufferedReader csvReader= new BufferedReader(new FileReader(pathOfFile));
+            BufferedReader csvReader = new BufferedReader(
+                    new InputStreamReader(getClass().getClassLoader().
+                            getResourceAsStream(pathOfFile)));
             int row=0;
             while((line=csvReader.readLine())!=null){
                 String [] content=line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");

@@ -8,6 +8,8 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,7 +23,7 @@ import java.util.stream.Collectors;
 
 @RestController
 public class FetchDataFromDb {
-
+    private static final String  FILE_PATH = "src/main/resources/static/netflix_titles.csv";
     @Autowired
     FetchData fetchData;
 
@@ -29,15 +31,43 @@ public class FetchDataFromDb {
     private FetchData netflixData;
 
     @PostMapping(path = "tvshows", consumes="application/json", params = "flag") //  flag= db or csv(define where data need to save)
-    String saveNetflix(@RequestBody ContentModel model, @RequestParam String flag){
+    String saveNetflix(@RequestBody ContentModel model, @RequestParam String flag) throws IOException {
          if(flag=="db") {
              //saving in db
           netflixData.save(model);
 
-         }else{
+         }else if(flag=="csv"){
         // for saving in csv
 
-         }
+                 FileWriter csvWriter = new FileWriter(FILE_PATH,true);
+                 csvWriter.append("\n");
+                 csvWriter.append(model.getShow_id());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getType());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getTitle());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getDirector());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getCast());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getCountry());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getDate_added());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getRelease_year());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getRating());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getDuration());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getListed_in());
+                 csvWriter.append(",");
+                 csvWriter.append(model.getDescription());
+                 csvWriter.flush();
+                 csvWriter.close();
+             }
+
         return "";
     }
 
