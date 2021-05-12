@@ -5,6 +5,8 @@ import com.movie.netflixdata.repository.FetchData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -22,6 +24,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.hibernate.tool.schema.SchemaToolingLogging.LOGGER;
@@ -33,46 +36,68 @@ public class FetchDataFromDb {
     @Autowired
     FetchData fetchData;
 
-    @Autowired
-    private FetchData netflixData;
+
 
     @PostMapping(path = "tvshows", consumes="application/json", params = "flag") //  flag= db or csv(define where data need to save)
-    String saveNetflix(@RequestBody ContentModel model, @RequestParam String flag) throws IOException {
-         if(flag=="db") {
+    String saveNetflix(HttpServletRequest req,
+                       HttpServletResponse res,@RequestBody ContentModel model, @RequestParam String flag) throws IOException {
+        LOGGER.info("start of saveNetflix");
+        Instant startTime,endTime;
+        startTime = Instant.now();
+         if(flag.equals("db")) {
              //saving in db
-          netflixData.save(model);
+             LOGGER.info("in db");
+             fetchData.save(model);
+             LOGGER.info("exit db");
 
-         }else if(flag=="csv"){
+         }else if(flag.equals("csv")){
         // for saving in csv
+             LOGGER.info("in csv");
 
-                 FileWriter csvWriter = new FileWriter(FILE_PATH,true);
-                 csvWriter.append("\n");
-                 csvWriter.append(model.getShow_id());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getType());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getTitle());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getDirector());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getCast());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getCountry());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getDate_added());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getRelease_year());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getRating());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getDuration());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getListed_in());
-                 csvWriter.append(",");
-                 csvWriter.append(model.getDescription());
-                 csvWriter.flush();
-                 csvWriter.close();
+            try {
+
+                 FileWriter fw = new FileWriter(FILE_PATH,true); //the true will append the new data
+                StringBuilder   csvWriter = new StringBuilder();
+
+                csvWriter.append(model.getShow_id());
+                csvWriter.append(",");
+                csvWriter.append(model.getType());
+                csvWriter.append(",");
+                csvWriter.append(model.getTitle());
+                csvWriter.append(",");
+                csvWriter.append(model.getDirector());
+                csvWriter.append(",");
+                csvWriter.append(model.getCast());
+                csvWriter.append(",");
+                csvWriter.append(model.getCountry());
+                csvWriter.append(",");
+                csvWriter.append(model.getDate_added());
+                csvWriter.append(",");
+                csvWriter.append(model.getRelease_year());
+                csvWriter.append(",");
+                csvWriter.append(model.getRating());
+                csvWriter.append(",");
+                csvWriter.append(model.getDuration());
+                csvWriter.append(",");
+                csvWriter.append(model.getListed_in());
+                csvWriter.append(",");
+                csvWriter.append(model.getDescription());
+                csvWriter.append("\n");
+                 fw.write( csvWriter.toString());//appends the string to the file
+                 fw.close();
+
              }
+             catch(IOException e)
+             {
+                 System.err.println("IOException: " + e.getMessage());
+             }
+
+             }
+        LOGGER.info("saveNetflix end");
+        endTime = Instant.now();
+        long time = Duration.between(startTime,endTime).toMillis();
+        LOGGER.info("Process of execution of the request :"+time+" milliseconds .");
+        res.setHeader("X-TIME-TO-EXECUTE", String.valueOf(time));
 
         return "";
     }
@@ -82,11 +107,13 @@ public class FetchDataFromDb {
 
     @GetMapping(path="/tvshows", params = "count", produces = "application/json")
 
-   public List<ContentModel> getNumData( HttpServletRequest request,
-                                   HttpServletResponse response, @RequestParam Integer count){
+   public List<ContentModel> getNumData( HttpServletRequest req,
+                                   HttpServletResponse res, @RequestParam Integer count){
+
         Instant startTime,endTime;
         startTime = Instant.now();
         List<ContentModel> netflixDataService=new ArrayList<>();
+
         try{
             netflixDataService=  fetchData.findAll().stream()
                            .limit(count).collect(Collectors.toList());
@@ -96,7 +123,8 @@ public class FetchDataFromDb {
         endTime = Instant.now();
         long time = Duration.between(startTime,endTime).toMillis();
         LOGGER.info("Process of execution of the request :"+time+" milliseconds .");
-        response.setHeader("X-TIME-TO-EXECUTE", String.valueOf(time));
+        res.setHeader("X-TIME-TO-EXECUTE", String.valueOf(time));
+
        return netflixDataService;
     }
 

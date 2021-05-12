@@ -20,8 +20,9 @@ public class AuthMiddleWare implements Filter {
         String token=req.getHeader("X-Auth-Token");
         if(token==null){
         res.setStatus(401);
+        }else {
+            chain.doFilter(request, response);
         }
-        chain.doFilter(request,response);
     }
 
 }

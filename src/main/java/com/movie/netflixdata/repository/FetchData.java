@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface FetchData extends JpaRepository<ContentModel, String> {
+public interface FetchData extends JpaRepository<ContentModel, Integer> {
 
 
     @Override
